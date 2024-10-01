@@ -22,7 +22,7 @@ GO_PKG_BUILD_PKG:=$(GO_PKG)/cli
 GO_PKG_LDFLAGS_X:=$(GO_PKG)/constant.Version=$(PKG_VERSION)
 
 include $(INCLUDE_DIR)/package.mk
-include ../../lang/golang/golang-package.mk
+include $(TOPDIR)/feeds/packages/lang/golang/golang-package.mk
 
 define Package/hiddify-core
   TITLE:=Hiddify universal proxy platform
