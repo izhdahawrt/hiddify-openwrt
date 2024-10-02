@@ -68,12 +68,7 @@ jobs:
       - name: Calculate checksum
         working-directory: sdk  # Set the correct working directory
         run: |
-          IPK_FILE=$(find bin/packages/${{ matrix.target.arch }}/hiddify/ -name 'hiddify-core_*_r1_*.ipk')
-          if [ -z "$IPK_FILE" ]; then
-            echo "No .ipk file found!"
-            exit 1
-          fi
-          CHECKSUM=$(sha256sum $IPK_FILE | cut -d ' ' -f 1)
+          CHECKSUM=$(sha256sum bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${{ env.VERSION }}-r1_${{ matrix.target.arch }}.ipk | cut -d ' ' -f 1)
           echo "SHA256 checksum: $CHECKSUM"
           echo "checksum=${CHECKSUM}" >> $GITHUB_ENV
 
