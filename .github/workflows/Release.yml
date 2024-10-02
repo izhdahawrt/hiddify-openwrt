@@ -1,39 +1,82 @@
-# Step 1: Ensure TARGET is correctly set and echo all variables
-echo "Setting up build environment"
-TARGET=${{ matrix.target }}
-GCC_VERSION=13.3.0
+name: Build and Release Hiddify IPK Packages
 
-case "$TARGET" in
-  "mediatek/filogic") ARCH="aarch64_cortex-a53"; EABI_SUFFIX="";;
-  "mediatek/mt7622") ARCH="aarch64_cortex-a53"; EABI_SUFFIX="";;
-  "qualcommax/ipq807x") ARCH="aarch64_cortex-a53"; EABI_SUFFIX="";;
-  "ramips/mt7621") ARCH="mipsel_24kc"; EABI_SUFFIX="";;
-  "rockchip/armv8") ARCH="aarch64_generic"; EABI_SUFFIX="";;
-  "ipq40xx/chromium") ARCH="arm_cortex-a7_neon-vfpv4"; EABI_SUFFIX="_eabi";;
-  "ipq40xx/mikrotik") ARCH="arm_cortex-a7_neon-vfpv4"; EABI_SUFFIX="_eabi";;
-  *) echo "Unknown target $TARGET"; exit 1;;
-esac
+on:
+  push:
+    tags:
+      - 'v*.*.*'
 
-echo "Target: $TARGET"
-echo "ARCH: $ARCH"
-echo "EABI_SUFFIX: $EABI_SUFFIX"
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
 
-# Step 2: Construct the SDK_URL
-SDK_URL="https://downloads.openwrt.org/snapshots/targets/${TARGET//\//-}/openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst"
+    env:
+      GCC_VERSION: "13.3.0"
+      HIDDIFY_REPO: "https://github.com/izhdahawrt/hiddify-openwrt.git"
+      VERSION: ${{ github.ref_name }}
 
-# Debugging - Print the final constructed URL
-echo "SDK URL: $SDK_URL"
+    strategy:
+      matrix:
+        target:
+          - { platform: "mediatek", subtarget: "filogic", arch: "aarch64_cortex-a53", abi: "musl" }
+          - { platform: "mediatek", subtarget: "mt7622", arch: "aarch64_cortex-a53", abi: "musl" }
+          - { platform: "qualcommax", subtarget: "ipq807x", arch: "aarch64_cortex-a53", abi: "musl" }
+          - { platform: "ramips", subtarget: "mt7621", arch: "mipsel_24kc", abi: "musl" }
+          - { platform: "rockchip", subtarget: "armv8", arch: "aarch64_generic", abi: "musl" }
+          - { platform: "ipq40xx", subtarget: "chromium", arch: "arm_cortex-a7_neon-vfpv4", abi: "musl_eabi" }
+          - { platform: "ipq40xx", subtarget: "generic", arch: "arm_cortex-a7_neon-vfpv4", abi: "musl_eabi" }
+          - { platform: "ipq40xx", subtarget: "mikrotik", arch: "arm_cortex-a7_neon-vfpv4", abi: "musl_eabi" }
+          - { platform: "x86", subtarget: "64", arch: "x86_64", abi: "musl" }
+          - { platform: "mvebu", subtarget: "cortexa72", arch: "aarch64_cortex-a72", abi: "musl" }
+          - { platform: "ipq806x", subtarget: "generic", arch: "arm_cortex-a15_neon-vfpv4", abi: "musl_eabi" }
+          - { platform: "ath79", subtarget: "generic", arch: "mips_24kc", abi: "musl" }
+          - { platform: "ath79", subtarget: "mikrotik", arch: "mips_24kc", abi: "musl" }
 
-# Step 3: Download the SDK
-wget $SDK_URL
-if [ $? -ne 0 ]; then
-  echo "Error downloading SDK for $TARGET"
-  exit 1
-fi
+    steps:
+      - name: Set up environment
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ack antlr3 asciidoc autoconf automake autopoint bison build-essential \
+            bzip2 ccache clang cmake cpio curl device-tree-compiler ecj fastjar file flex gawk gettext \
+            gcc-multilib g++ g++-multilib git gnutls-dev gperf haveged help2man intltool lib32gcc-s1 \
+            libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev \
+            libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev \
+            libtool lld llvm lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf \
+            python3 python3-pip python3-ply python3-docutils python3-pyelftools python3-setuptools \
+            qemu-utils re2c rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip \
+            vim wget xmlto xxd zlib1g-dev zstd axel
 
-# Step 4: Extract the SDK
-tar -xvf openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst
+      - name: Check out the repository
+        uses: actions/checkout@v2
 
-# Step 5: Set SDK directory variable
-SDK_DIR=$(basename openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst .tar.zst)
-echo "SDK Directory: $SDK_DIR"
+      - name: Download OpenWrt SDK
+        run: |
+          SDK_URL="https://downloads.openwrt.org/snapshots/targets/${{ matrix.target.platform }}/${{ matrix.target.subtarget }}/openwrt-sdk-${{ matrix.target.platform }}-${{ matrix.target.subtarget }}_gcc-${{ env.GCC_VERSION }}_${{ matrix.target.abi }}.Linux-x86_64.tar.zst"
+          echo "Downloading SDK from: $SDK_URL"
+          wget $SDK_URL -O sdk.tar.zst
+
+      - name: Extract SDK
+        run: |
+          mkdir -p sdk && tar --use-compress-program=unzstd -xf sdk.tar.zst -C sdk --strip-components=1
+
+      - name: Configure SDK and build hiddify-core
+        working-directory: sdk
+        run: |
+          echo "src-git hiddify ${HIDDIFY_REPO}" >> feeds.conf.default
+          ./scripts/feeds update -a
+          ./scripts/feeds install hiddify-core
+          make defconfig
+          make package/hiddify-core/compile -j$(nproc)
+
+      - name: Calculate checksum
+        run: |
+          CHECKSUM=$(sha256sum bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${{ env.VERSION }}-r1_${{ matrix.target.arch }}.ipk | cut -d ' ' -f 1)
+          echo "SHA256 checksum: $CHECKSUM"
+          echo "checksum=${CHECKSUM}" >> $GITHUB_ENV
+
+      - name: Upload IPK and checksum as release assets
+        uses: actions/upload-artifact@v3
+        with:
+          name: hiddify-core-${{ matrix.target.platform }}-${{ matrix.target.subtarget }}-${{ env.VERSION }}.ipk
+          path: |
+            sdk/bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${{ env.VERSION }}-r1_${{ matrix.target.arch }}.ipk
+            sdk/bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${{ env.VERSION }}-r1_${{ matrix.target.arch }}.ipk.sha256sum
