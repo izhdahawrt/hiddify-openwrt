@@ -56,8 +56,12 @@ jobs:
 
       - name: Download SDK
         run: |
-          SDK_URL="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst"
+          SDK_URL="https://downloads.openwrt.org/snapshots/targets/${TARGET//\//-}/openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst"
           wget $SDK_URL
+          if [ $? -ne 0 ]; then
+            echo "Error downloading SDK for $TARGET"
+            exit 1
+          fi
           tar -xvf openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst
           SDK_DIR=$(basename openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst .tar.zst)
 
