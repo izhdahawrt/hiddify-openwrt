@@ -56,7 +56,7 @@ jobs:
       - name: Configure SDK and build hiddify-core
         working-directory: sdk
         run: |
-          echo "src-git hiddify ${HIDDIFY_REPO}" >> feeds.conf.default
+          echo "src-git hiddify https://github.com/izhdahawrt/hiddify-openwrt.git" >> feeds.conf.default
           ./scripts/feeds update -a
           ./scripts/feeds install hiddify-core
           make defconfig
