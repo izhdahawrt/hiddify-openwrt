@@ -29,6 +29,9 @@ jobs:
     steps:
       - name: Set up environment
         run: |
+          docker rmi `docker images -q`
+          sudo -E rm -rf /usr/share/dotnet /etc/mysql /etc/php /etc/apt/sources.list.d /usr/local/lib/android
+          echo "Install packages"
           sudo apt-get update
           sudo apt-get install -y ack antlr3 asciidoc autoconf automake autopoint bison build-essential \
             bzip2 ccache clang cmake cpio curl device-tree-compiler ecj fastjar file flex gawk gettext \
