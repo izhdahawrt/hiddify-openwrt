@@ -60,7 +60,7 @@ jobs:
           ./scripts/feeds update -a
           ./scripts/feeds install hiddify-core
           make defconfig
-          make package/hiddify-core/compile -j$(nproc)
+          make package/hiddify-core/compile 
 
       - name: Calculate checksum
         working-directory: sdk  # Set the correct working directory
