@@ -40,6 +40,9 @@ jobs:
             "ipq40xx/mikrotik") ARCH="arm_cortex-a7_neon-vfpv4"; EABI_SUFFIX="_eabi";;
             *) echo "Unknown target $TARGET"; exit 1;;
           esac
+          echo "Target: $TARGET"
+          echo "ARCH: $ARCH"
+          echo "EABI_SUFFIX: $EABI_SUFFIX"
 
       - name: Install required packages
         run: |
@@ -56,7 +59,9 @@ jobs:
 
       - name: Download SDK
         run: |
-          SDK_URL="https://downloads.openwrt.org/snapshots/targets/${TARGET//\//-}/openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst"
+          echo "Downloading SDK..."
+          SDK_URL="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst"
+          echo "SDK URL: $SDK_URL"
           wget $SDK_URL
           if [ $? -ne 0 ]; then
             echo "Error downloading SDK for $TARGET"
@@ -64,6 +69,7 @@ jobs:
           fi
           tar -xvf openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst
           SDK_DIR=$(basename openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst .tar.zst)
+          echo "SDK Directory: $SDK_DIR"
 
       - name: Set up feeds
         run: |
