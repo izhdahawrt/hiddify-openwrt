@@ -1,0 +1,90 @@
+name: Build Hiddify-Core for OpenWrt
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        target:
+          - mediatek/filogic
+          - mediatek/mt7622
+          - qualcommax/ipq807x
+          - ramips/mt7621
+          - rockchip/armv8
+          - ipq40xx/chromium
+          - ipq40xx/mikrotik
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Set up environment
+        run: |
+          echo "Setting up build environment"
+          TARGET=${{ matrix.target }}
+          GCC_VERSION=13.3.0
+          case "$TARGET" in
+            "mediatek/filogic") ARCH="aarch64_cortex-a53"; EABI_SUFFIX="";;
+            "mediatek/mt7622") ARCH="aarch64_cortex-a53"; EABI_SUFFIX="";;
+            "qualcommax/ipq807x") ARCH="aarch64_cortex-a53"; EABI_SUFFIX="";;
+            "ramips/mt7621") ARCH="mipsel_24kc"; EABI_SUFFIX="";;
+            "rockchip/armv8") ARCH="aarch64_generic"; EABI_SUFFIX="";;
+            "ipq40xx/chromium") ARCH="arm_cortex-a7_neon-vfpv4"; EABI_SUFFIX="_eabi";;
+            "ipq40xx/mikrotik") ARCH="arm_cortex-a7_neon-vfpv4"; EABI_SUFFIX="_eabi";;
+            *) echo "Unknown target $TARGET"; exit 1;;
+          esac
+
+      - name: Install required packages
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ack antlr3 asciidoc autoconf automake autopoint bison build-essential \
+            bzip2 ccache clang cmake cpio curl device-tree-compiler ecj fastjar file flex gawk gettext \
+            gcc-multilib g++ g++-multilib git gnutls-dev gperf haveged help2man intltool lib32gcc-s1 \
+            libc6-dev-i386 libelf-dev libfuse-dev libglib2.0-dev libgmp3-dev libltdl-dev libmpc-dev \
+            libmpfr-dev libncurses5-dev libncursesw5-dev libpython3-dev libreadline-dev libssl-dev \
+            libtool lld llvm lrzsz mkisofs msmtp nano ninja-build p7zip p7zip-full patch pkgconf \
+            python3 python3-pip python3-ply python3-docutils python3-pyelftools python3-setuptools \
+            qemu-utils re2c rsync scons squashfs-tools subversion swig texinfo uglifyjs upx-ucl unzip \
+            vim wget xmlto xxd zlib1g-dev zstd
+
+      - name: Download SDK
+        run: |
+          SDK_URL="https://downloads.openwrt.org/snapshots/targets/${TARGET}/openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst"
+          wget $SDK_URL
+          tar -xvf openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst
+          SDK_DIR=$(basename openwrt-sdk-${TARGET//\//-}_gcc-${GCC_VERSION}_musl${EABI_SUFFIX}.Linux-x86_64.tar.zst .tar.zst)
+
+      - name: Set up feeds
+        run: |
+          cd $SDK_DIR
+          echo "src-git hiddify https://github.com/izhdahawrt/hiddify-openwrt.git" >> feeds.conf.default
+          ./scripts/feeds update -a
+          ./scripts/feeds install hiddify-core
+
+      - name: Compile Hiddify-Core
+        run: |
+          make defconfig
+          make package/hiddify-core/compile -j$(nproc)
+
+      - name: Verify Package
+        run: |
+          PACKAGE_PATH=bin/packages/${ARCH}/hiddify/hiddify-core_*.ipk
+          if [ -f "$PACKAGE_PATH" ]; then
+            sha256sum $PACKAGE_PATH
+          else
+            echo "Package not found!"
+            exit 1
+          fi
+
+      - name: Upload Package Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: hiddify-core-${{ matrix.target }}
+          path: bin/packages/${ARCH}/hiddify/hiddify-core_*.ipk
