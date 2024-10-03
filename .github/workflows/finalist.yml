@@ -93,4 +93,4 @@ jobs:
           name: hiddify-core-${{ matrix.target.platform }}-${{ matrix.target.subtarget }}-${PKG_VERSION}-${PKG_RELEASE}.ipk
           path: |
             hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk
-            hiddify/hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk.sha256sum
+            hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk.sha256sum
