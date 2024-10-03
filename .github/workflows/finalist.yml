@@ -83,7 +83,5 @@ jobs:
         with:
           name: hiddify-core-${{ matrix.target.platform }}-${{ matrix.target.subtarget }}-${PKG_VERSION}-${PKG_RELEASE}.ipk
           path: |
-            ls
-            pwd
             hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk
             hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk.sha256sum
