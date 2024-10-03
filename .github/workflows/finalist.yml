@@ -79,20 +79,19 @@ jobs:
           echo "PKG_VERSION=$PKG_VERSION" >> $GITHUB_ENV
           echo "PKG_RELEASE=r$PKG_RELEASE" >> $GITHUB_ENV
 
-      - name: Calculate checksum
-        working-directory: sdk
+      - name: Calculate checksum and create SHA256 file
+        working-directory: sdk/bin/packages/${{ matrix.target.arch }}/hiddify
         run: |
-          CHECKSUM=$(sha256sum bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk | cut -d ' ' -f 1)
+          CHECKSUM=$(sha256sum hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk | cut -d ' ' -f 1)
           echo "SHA256 checksum: $CHECKSUM"
           echo "checksum=${CHECKSUM}" >> $GITHUB_ENV
-
-      - name: List all files in sdk/bin/packages
-        run: ls -R sdk/bin/packages
+          # Create sha256sum file
+          sha256sum hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk > hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk.sha256sum
 
       - name: Upload IPK and checksum as release assets
         uses: actions/upload-artifact@v3
         with:
           name: hiddify-core-${{ matrix.target.platform }}-${{ matrix.target.subtarget }}-${PKG_VERSION}-${PKG_RELEASE}.ipk
           path: |
-            sdk/bin/packages/**/hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk
-            sdk/bin/packages/**/hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk.sha256sum
+            sdk/bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk
+            sdk/bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${PKG_VERSION}-${PKG_RELEASE}_${{ matrix.target.arch }}.ipk.sha256sum
