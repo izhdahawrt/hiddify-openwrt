@@ -2,8 +2,13 @@ name: Release Hiddify IPK Packages
 
 on:
   push:
-    tags:
-      - 'v*.*.*'
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+  
 
 jobs:
   build-and-release:
