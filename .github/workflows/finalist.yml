@@ -23,6 +23,16 @@ jobs:
       matrix:
         target:
           - { platform: "mediatek", subtarget: "filogic", arch: "aarch64_cortex-a53", abi: "musl" }
+          - { platform: "mediatek", subtarget: "mt7622", arch: "aarch64_cortex-a53", abi: "musl" }
+          - { platform: "qualcommax", subtarget: "ipq807x", arch: "aarch64_cortex-a53", abi: "musl" }
+          - { platform: "ipq806x", subtarget: "generic", arch: "arm_cortex-a15_neon-vfpv4", abi: "musl_eabi" }
+          - { platform: "ramips", subtarget: "mt7621", arch: "mipsel_24kc", abi: "musl" }
+          - { platform: "rockchip", subtarget: "armv8", arch: "aarch64_generic", abi: "musl" }
+          - { platform: "ipq40xx", subtarget: "chromium", arch: "arm_cortex-a7_neon-vfpv4", abi: "musl_eabi" }
+          - { platform: "ipq40xx", subtarget: "generic", arch: "arm_cortex-a7_neon-vfpv4", abi: "musl_eabi" }
+          - { platform: "ipq40xx", subtarget: "mikrotik", arch: "arm_cortex-a7_neon-vfpv4", abi: "musl_eabi" }
+          - { platform: "x86", subtarget: "64", arch: "x86_64", abi: "musl" }
+          - { platform: "mvebu", subtarget: "cortexa72", arch: "aarch64_cortex-a72", abi: "musl" }
           - { platform: "ath79", subtarget: "mikrotik", arch: "mips_24kc", abi: "musl" }
 
     steps:
