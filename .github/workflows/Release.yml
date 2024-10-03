@@ -68,14 +68,14 @@ jobs:
       - name: Calculate checksum
         working-directory: sdk  # Set the correct working directory
         run: |
-          CHECKSUM=$(sha256sum bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${{ env.VERSION }}-r1_${{ matrix.target.arch }}.ipk | cut -d ' ' -f 1)
+          CHECKSUM=$(sha256sum bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_3.1.5-r1_${{ matrix.target.arch }}.ipk | cut -d ' ' -f 1)
           echo "SHA256 checksum: $CHECKSUM"
           echo "checksum=${CHECKSUM}" >> $GITHUB_ENV
 
       - name: Upload IPK and checksum as release assets
         uses: actions/upload-artifact@v3
         with:
-          name: hiddify-core-${{ matrix.target.platform }}-${{ matrix.target.subtarget }}-${{ env.VERSION }}.ipk
+          name: hiddify-core-${{ matrix.target.platform }}-${{ matrix.target.subtarget }}-3.1.5.ipk
           path: |
-            sdk/bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${{ env.VERSION }}-r1_${{ matrix.target.arch }}.ipk
-            sdk/bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_${{ env.VERSION }}-r1_${{ matrix.target.arch }}.ipk.sha256sum
+            sdk/bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_3.1.5-r1_${{ matrix.target.arch }}.ipk
+            sdk/bin/packages/${{ matrix.target.arch }}/hiddify/hiddify-core_3.1.5-r1_${{ matrix.target.arch }}.ipk.sha256sum
